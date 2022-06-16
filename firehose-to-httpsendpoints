@@ -1,0 +1,76 @@
+#AWS Kinesis Fire Hose to MongoDB Atlas Application Services HTTP Endpoint
+## This is a guide to connect a Firehose datastream to Atlas App Services HTTP Endpoint
+
+This is an update to an older AWS guide, the original/older guide can be found here:  [AWS Original Guide from 2020](https://aws.amazon.com/blogs/big-data/integrating-the-mongodb-cloud-with-amazon-kinesis-data-firehose/)
+
+
+// Language is JavaScript
+// This guide is modified instructions from 
+// This function is the endpoint's request handler, this was changed to work with the example function script already
+// provided in the MongoDB Atlas App Services endpoint Functions of drafting.
+exports = function({ query, headers, body}, response) {
+    // Data can be extracted from the request as follows:
+  
+     const decodeBase64 = (s) => {
+        var e={},i,b=0,c,x,l=0,a,r='',w=String.fromCharCode,L=s.length
+        var A="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+        for(i=0;i<64;i++){e[A.charAt(i)]=i}
+        for(x=0;x<L;x++){
+            c=e[s.charAt(x)];b=(b<<6)+c;l+=6
+            while(l>=8){((a=(b>>>(l-=8))&0xff)||(x<(L-2)))&&(r+=w(a))}
+        }
+        return r
+    }
+    
+    // Headers, e.g. {"Content-Type": ["application/json"]}
+    const contentTypes = headers["Content-Type"];
+
+    // Raw request body (if the client sent one).
+    // This is a binary object that can be accessed as a string using .text()
+    const reqBody = body;
+
+    console.log("Content-Type:", JSON.stringify(contentTypes));
+    console.log("Request body:", reqBody);
+    console.log("Headers", JSON.stringify(headers));
+    
+    const firehoseAccessKey = headers["X-Amz-Firehose-Access-Key"];
+ 
+   // Check shared secret is the same to validate Request source
+   if (firehoseAccessKey == context.values.get("theNameOfTheValueThatYouCreatedGoesHere")) {
+    
+    var fullDocument = JSON.parse(body.text());
+    
+      var collection = context.services.get("linkedDataSourceGoesHere").db("nameOfAtlasDatabaseGoesHere").collection("theNameThatYouWantForTheCollectionGoesHere");
+      
+      fullDocument.records.forEach((record) => {
+            const document = JSON.parse(decodeBase64(record.data))
+            const status = collection.insertOne(document);
+            console.log("got status: "+ status)
+      })
+      console.log("Authenticated");
+      response.setStatusCode(200);
+      const s = JSON.stringify({
+                requestId: headers['X-Amz-Firehose-Request-Id'][0],
+                timestamp: (new Date()).getTime()
+            });
+     response.addHeader(
+                "Content-Type",
+                "application/json"
+            );
+            response.setBody(s)
+            console.log("response JSON:" + s)
+      return
+   } 
+    else {
+      console.log("Not Authenticated");
+      response.setStatusCode(500);
+      response.addHeader("Content-Type","application/json");
+      response.setBody(JSON.stringify({
+              requestId: headers['X-Amz-Firehose-Request-Id'][0],
+              timestamp: (new Date()).getTime(),
+              errorMessage: "Error authenticating"
+            }))
+      return;
+     
+     
+    }}
