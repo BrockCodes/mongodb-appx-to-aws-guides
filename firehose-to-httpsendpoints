@@ -18,11 +18,11 @@
 // - The name of the collection 
 
 // I will leave the following lines open for you to paste the information as it's obtained or made here:
-// API KEY:             LDeKqRMUtLFuKfqgpNftHHG1cVfK003IRsKQWn2xsXGPYVdNHmbfInJeo9NIKP6n
-// HTTPS ENDPOINTS URL: https://us-west-2.aws.data.mongodb-api.com/app/learnhowtorealmv2-ivdem/endpoint/monkeyfirehose
-// VALUE NAME:          monkeyhears
-// DATASOURCE:          mongodb-atlas
-// DATABASE NAME:       learnhowtorealmv2
+// API KEY:             
+// HTTPS ENDPOINTS URL: 
+// VALUE NAME:          
+// DATASOURCE:          
+// DATABASE NAME:       
 
 // ATLAS APP SERVICES
 //STEP 1. Go to Authentication on the left hand side near the top.
@@ -168,11 +168,11 @@ exports = function({ query, headers, body}, response) {
     const firehoseAccessKey = headers["X-Amz-Firehose-Access-Key"];
  
    // Check shared secret is the same to validate Request source, you will create this yourself
-   if (firehoseAccessKey == context.values.get("monkeyhears")) {
+   if (firehoseAccessKey == context.values.get("valueThatYouMadeGoesHere")) {
     
     var fullDocument = JSON.parse(body.text());
     
-      var collection = context.services.get("mongodb-atlas").db("learnhowtorealmv2").collection("themonkeyfirehose");
+      var collection = context.services.get("dataSourceGoesHere").db("nameOfDatabaseGoesHere").collection("whatCollectionToMakeOrUseGoesHere");
       
       fullDocument.records.forEach((record) => {
             const document = JSON.parse(decodeBase64(record.data))
