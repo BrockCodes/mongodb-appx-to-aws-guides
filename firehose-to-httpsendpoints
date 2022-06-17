@@ -1,13 +1,144 @@
-#AWS Kinesis Fire Hose to MongoDB Atlas Application Services HTTP Endpoint
-## This is a guide to connect a Firehose datastream to Atlas App Services HTTP Endpoint
+// AWS Kinesis Fire Hose to MongoDB Atlas Application Services HTTP Endpoint
+// This is a guide to connect a Firehose datastream to Atlas App Services HTTP Endpoint
+// This guide was written for ease of use within an IDE or Terminal Window
 
-This is an update to an older AWS guide, the original/older guide can be found here:  [AWS Original Guide from 2020](https://aws.amazon.com/blogs/big-data/integrating-the-mongodb-cloud-with-amazon-kinesis-data-firehose/)
+// This is an update to an older AWS guide, the original/older guide can be found here:  [AWS Original Guide from 2020](https://aws.amazon.com/blogs/big-data/integrating-the-mongodb-cloud-with-amazon-kinesis-data-firehose/)
+// Key script changes: 
+// Added header information to show up in the logs.
+// Added verified authentication response for the App Services Logs
+// Added failure to authenticate response for the App Services Logs
+// Removed "payload" refrences from the original function script
+// The following steps will guide you through making an AWS Firehose DataStream connect to HTTPS Endpoints in Atlas App Services
+
+// ENVIRONMENT SETUP
+// Before we begin, you're going to need to setup your API key for your script, and the Firehose.
+// We will also want to collect the following: 
+// - The name of the DataSource
+// - The name of the Database
+// - The name of the collection 
+
+// I will leave the following lines open for you to paste the information as it's obtained or made here:
+// API KEY:             LDeKqRMUtLFuKfqgpNftHHG1cVfK003IRsKQWn2xsXGPYVdNHmbfInJeo9NIKP6n
+// HTTPS ENDPOINTS URL: https://us-west-2.aws.data.mongodb-api.com/app/learnhowtorealmv2-ivdem/endpoint/monkeyfirehose
+// VALUE NAME:          monkeyhears
+// DATASOURCE:          mongodb-atlas
+// DATABASE NAME:       learnhowtorealmv2
+
+// ATLAS APP SERVICES
+//STEP 1. Go to Authentication on the left hand side near the top.
+// Select API Keys and click EDIT
+// Click AUTHENTICATION PROVIDERS
+// Click the PRIVER ENABLED toggle to the ON position
+// Click CREATE NEW API KEY
+// Type in your API Keys name
+// Copy and paste the API key somewhere for safe storage temporarily, this the only chance you'll have
+// to get this API key to copy it, so once you leave this tab it will no longer be retrievable.
+
+//STEP 2. Create your SECRET
+// You can do this by clicking Values in the left hand panel within your Atlas App Services section
+// Right beneath the button for HTTPS Endpoints, you have a button called "Values"
+// Click on Values
+// Click Create New Values in the top right of the menu.
+// Type in the "Give Your Value a Name" what you would like to name your SECRET
+// CHOOSE A TYPE in this step you're going to select SECRET
+// ADD CONTENT box, you're going to paste your API Key that you generated from the Authentication tab here
+// Click SAVE DRAFT
+
+//STEP 3. Create your VALUE
+// You can do this while in the Values tab where you created your SECRET by clicking CREATE NEW VALUE
+// Type in the new VALUE name 
+// Select VALUE
+// Select LINK TO SECRET
+// In the drop down menu, choose the SECRET by the name you gave it
+// Click SAVE DRAFT
+
+//STEP 4. Collect the information you're going to need for the function
+// The information we're going to need is the Datasource, database, and specify the collection for it
+// By preplanning this step it will make the script painless
+// Go to LINKED DATA SOURCE on the panel on the left, just under MANAGE heading
+// You will what the SERVICE NAME for the LINKED DATA SOURCE, copy that and put it where you put your API Key
+// Go to Atlas tab at the top, and look at what the name for the Atlas Cluster is, put it with the LINKED DATA SOURCE info
+// Lastly, determine the name of your collection you want to use, and put that with the rest
+
+//STEP 5. Click on HTTPS Endpoints
+// Click ADD AN ENDPOINT
+// In the ROUTE field, we are going to type in the name of our endpoint starting with "/" such as "/myEndpointsName" without quotations.
+// Clicked the ENABLED toggle to the ON position
+// Click the ENDPOINT SETTINGS arrow to the downward position exposing the URL if it has not done so already.
+// Copy the new ENDPOINT URL and put it where you put the API Key and the previously collection information
+// Select the HTTP Method, for this example you can choose ANY
+// RESPOND with RESULT will be your descretion 
+// RETURN TYPE use JSON
+// FUNCTION  create NEW FUNCTION and now go to the AWS Kinesis Firehose Stream
+// AUTHORIZATION is your discretion, in this example we will use no more authentication.
+
+//STEP 6.
+// In the function box, copy and paste the code below.
+// Be sure to change lines 163, and 173 with the information we saved from ENVIRONMENT SETUP above.
+// USER SETTINGS are being left to default
+// Click DRAFT
+
+//STEP 7.
+// ATLAS APP SERVICES FUNCTION SETTINGS
+// Now that we've drafted the Endpoint, we are going to then go to FUNCTIONS
+// Select the function we made for the endpoint and go to SETTINGS
+// SELECT SYSTEM, and turn PRIVATE toggle ON
+// Click SAVE DRAFT
+// Now, on the top of the ATLAS APP SERVICES you should see a large blue bar going across stating "REVIEW DRAFT & DEPLOY"
+// Click REVIEW DRAFT AND DEPLOY
+// Once changes are finished deploying, you now have both Atlas App Services finished.
+
+// AWS KINESIS FIREHOSE STREAM
+
+//STEP 1.
+// In the AWS Kinesis Dashboard on the top left, click DELIVERY STREAM
+// To the right up top, click CREATE NEW DELIVERY STREAM
+
+//STEP 2. 
+// SOURCE AND DESTINATION HEADING
+// Under SOURCE drop down menu, select AMAZON KINESIS DATA STREAM
+// Under the DESTINATION drop down menu, scroll down and select MONGODB CLOUD
+
+//STEP 3.
+// SOURCE SETTINGS HEADING
+// Under KINESIS DATA STREAM go ahead and browse for your existing stream, but in this case, we'll CREATE
+// Click CREATE
+// Under DATA STREAM CONFIGURATION we are going to click in the box under DATA STREAM NAME and we will name our DataStream
+// Under CAPACITY MODE I am leaving it as ON DEMAND at this time and will click create in the bottom right of the page.
+// In the source settings, you can now select the new stream by clicking BROWSE
+
+//STEP 4.
+// DELIVERY STREAM NAME HEADING
+// Under DELIVERY STREAM NAME we will enter the name of our delivery stream in the text box
+
+//STEP 5.
+// TRANSFORM RECORDS HEADING
+// This is optional and is if you want to add lambda functions to modify things. We are leaving this
+// to disabled for this example.
+
+//STEP 6.
+// DESTINATION SETTINGS HEADING
+// This is where we will start pasting the web URL to the HTTPS Endpoint that we created, and input the API Key
+// Under URL MONGODB REALM WEBHOOD URL we will paste our Endpoints URL
+// Under API KEY we will paste our SECRET API Key we created earlier and saved
+// CONTENT ENCODING, RETRY DURATION, and the PAREMETERS we are leaving default for this example
+
+//STEP 7. 
+// BACKUP SETTINGS HEADING
+// Assign an AWS S3 bucket, or create one for failed data to be stored, or all data to be stored.
+// This is at your discretion.
+
+//STEP 8. 
+// At the bottom of the form, click CREATE DELIVER STREAM.
+
+// Now click on your stream, and start a test by deploying test data.
 
 
 // Language is JavaScript
-// This guide is modified instructions from 
 // This function is the endpoint's request handler, this was changed to work with the example function script already
 // provided in the MongoDB Atlas App Services endpoint Functions of drafting.
+
+
 exports = function({ query, headers, body}, response) {
     // Data can be extracted from the request as follows:
   
@@ -31,16 +162,17 @@ exports = function({ query, headers, body}, response) {
 
     console.log("Content-Type:", JSON.stringify(contentTypes));
     console.log("Request body:", reqBody);
+    // This adds the AWS Headers to the App Services Logs
     console.log("Headers", JSON.stringify(headers));
     
     const firehoseAccessKey = headers["X-Amz-Firehose-Access-Key"];
  
-   // Check shared secret is the same to validate Request source
-   if (firehoseAccessKey == context.values.get("theNameOfTheValueThatYouCreatedGoesHere")) {
+   // Check shared secret is the same to validate Request source, you will create this yourself
+   if (firehoseAccessKey == context.values.get("monkeyhears")) {
     
     var fullDocument = JSON.parse(body.text());
     
-      var collection = context.services.get("linkedDataSourceGoesHere").db("nameOfAtlasDatabaseGoesHere").collection("theNameThatYouWantForTheCollectionGoesHere");
+      var collection = context.services.get("mongodb-atlas").db("learnhowtorealmv2").collection("themonkeyfirehose");
       
       fullDocument.records.forEach((record) => {
             const document = JSON.parse(decodeBase64(record.data))
@@ -53,13 +185,13 @@ exports = function({ query, headers, body}, response) {
                 requestId: headers['X-Amz-Firehose-Request-Id'][0],
                 timestamp: (new Date()).getTime()
             });
-     response.addHeader(
+        response.addHeader(
                 "Content-Type",
                 "application/json"
             );
             response.setBody(s)
             console.log("response JSON:" + s)
-      return
+        return
    } 
     else {
       console.log("Not Authenticated");
@@ -71,6 +203,4 @@ exports = function({ query, headers, body}, response) {
               errorMessage: "Error authenticating"
             }))
       return;
-     
-     
     }}
